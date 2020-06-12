@@ -1,3 +1,24 @@
 ---
 
 # tasks file for osp.servers
+#
+- name: Provision Cattle
+  os_server:
+    state: present
+    name: "{{ item.value.name }}"
+    image: "rhel-guest"
+    key_name: ansible_ssh
+    flavor: m2.small
+    nics: "{{ item.value.nics }}"
+    meta: "{{ item.value.meta[0] }}"
+    security_groups: ["{{ item.value.security_group }}"]
+    user_data: "{{ item.value.userdata }}"
+  loop: "{{ osp_servers | dict2items }}"
+
+- name: Allocate External IP
+  os_floating_ip:
+    state: present
+    server: "{{ item.value.name }}"
+    network: "{{ item.value.ext_network }}"
+    nat_destination: "{{ item.value.int_network }}"
+  loop: "{{ osp_servers | dict2items }}"
